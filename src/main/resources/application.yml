@@ -1,0 +1,33 @@
+info:
+  component: Atlas
+
+spring:
+  profiles: default
+  application:
+    name: Atlas
+
+endpoints:
+  shutdown:
+    enabled: true
+  restart:
+    enabled: true
+  health:
+    sensitive: false
+
+logging:
+  level: DEBUG
+  file: ${java.io.tmpdir}/${spring.application.name}.log
+  levels:
+    org.springframework.boot.env.PropertySourcesLoader: TRACE
+    org.springframework.web: DEBUG
+    com.accordance.atlas.repository.ApplicationsRepositoryImpl: TRACE
+
+server:
+  port: 8080
+
+orient_db:
+  host: localhost
+  port: 2424
+  dbName: Accordance
+  username: root
+  password: password

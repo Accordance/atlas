@@ -1,0 +1,74 @@
+buildscript {
+    ext {
+        springBootVersion = '1.2.2.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'spring-boot'
+
+project.ext {
+    springBootVersion = '1.2.2.RELEASE'
+    springCloudVersion = '1.0.0.RELEASE'
+    restAssuredVersion = '2.4.0'
+}
+
+jar {
+    baseName = 'atlas'
+    version = '0.0.1-SNAPSHOT'
+}
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile("com.google.guava:guava:18.0")
+    compile("org.yaml:snakeyaml:1.15")
+    compile("commons-io:commons-io:2.4")
+    compile("com.googlecode.json-simple:json-simple:1.1.1")
+
+    // Spring Boot
+    compile("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+    compile("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
+    compile("org.springframework.boot:spring-boot-starter-remote-shell:$springBootVersion")
+
+    // Spring Cloud
+    compile("org.springframework.cloud:spring-cloud-commons:$springCloudVersion")
+    compile("org.springframework.cloud:spring-cloud-config-client:$springCloudVersion")
+    compile("org.springframework.cloud:spring-cloud-starter-hystrix:$springCloudVersion")
+
+//    compile 'com.orientechnologies:orient-commons:2.0-M1'
+    compile 'com.orientechnologies:orientdb-core:2.0.5'
+//    compile 'com.tinkerpop.blueprints:blueprints-core:2.6.0'
+    compile 'com.orientechnologies:orientdb-graphdb:2.0.5'
+    compile 'com.orientechnologies:orientdb-client:2.0.5'
+//    'com.orientechnologies:orientdb-enterprise:2.0.5'
+//    'com.orientechnologies:orientdb-community:2.0.5'
+    compile 'org.codehaus.jackson:jackson-core-asl:1.9.13'
+
+//    testCompile("junit:junit")
+    testCompile("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+    testCompile("com.jayway.restassured:rest-assured:$restAssuredVersion")
+}
+
+eclipse {
+    classpath {
+        containers.remove('org.eclipse.jdt.launching.JRE_CONTAINER')
+        containers 'org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7'
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
+}
