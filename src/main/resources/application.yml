@@ -32,3 +32,8 @@ orient_db:
   dbName: Accordance
   username: root
   password: password
+
+consul:
+  host: localhost
+  port: 8500
+  enabled: true
