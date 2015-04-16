@@ -18,7 +18,6 @@ public class ApplicationsRepositoryImpl implements ApplicationsRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplicationsRepositoryImpl.class);
 
-
     @Autowired
     OrientDbFactory orientDb;
 

@@ -1,6 +1,7 @@
+#info:
+#  component: Atlas1
+
 spring:
-  application:
-    name: atlas
   cloud:
     config:
       enabled: false

@@ -1,10 +1,10 @@
-info:
-  component: Atlas
+server:
+  port: 8080
 
 spring:
   profiles: default
   application:
-    name: Atlas
+    name: atlas
 
 endpoints:
   shutdown:
@@ -21,9 +21,10 @@ logging:
     org.springframework.boot.env.PropertySourcesLoader: TRACE
     org.springframework.web: DEBUG
     com.accordance.atlas.repository.ApplicationsRepositoryImpl: TRACE
+    org.springframework.cloud.consul: DEBUG
 
-server:
-  port: 8080
+ribbon:
+  ServerListRefreshInterval: 1000
 
 orient_db:
   host: localhost

@@ -19,7 +19,6 @@ project.ext {
     springBootVersion = '1.2.3.RELEASE'
     springCloudVersion = '1.0.0.RELEASE'
     restAssuredVersion = '2.4.0'
-    consulApiVersion = '1.1.0'
 }
 
 jar {
@@ -56,18 +55,12 @@ dependencies {
     compile("org.springframework.cloud:spring-cloud-consul-config:1.0.1.BUILD-SNAPSHOT")
     compile("org.springframework.cloud:spring-cloud-consul-discovery:1.0.1.BUILD-SNAPSHOT")
 
-//    compile 'com.orientechnologies:orient-commons:2.0-M1'
     compile 'com.orientechnologies:orientdb-core:2.0.5'
-//    compile 'com.tinkerpop.blueprints:blueprints-core:2.6.0'
     compile 'com.orientechnologies:orientdb-graphdb:2.0.5'
     compile 'com.orientechnologies:orientdb-client:2.0.5'
-//    'com.orientechnologies:orientdb-enterprise:2.0.5'
-//    'com.orientechnologies:orientdb-community:2.0.5'
     compile 'org.codehaus.jackson:jackson-core-asl:1.9.13'
 
     compile "com.google.code.gson:gson:2.3"
-    compile "com.ecwid.consul:consul-api:$consulApiVersion"
-
 
 //    testCompile("junit:junit")
     testCompile("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
