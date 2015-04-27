@@ -4,3 +4,5 @@ gradle
 *.iml
 gradlew
 gradlew.bat
+consul_token.*
+pkg

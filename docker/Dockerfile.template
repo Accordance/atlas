@@ -1,0 +1,5 @@
+FROM dockerfile/java:oracle-java8
+MAINTAINER igor@igorshare.com
+EXPOSE 8080
+ADD ${name}-${version}.jar /opt/${name}.jar
+ENTRYPOINT ["java", "-jar", "/opt/${name}.jar"]

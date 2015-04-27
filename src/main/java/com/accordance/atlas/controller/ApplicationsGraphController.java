@@ -15,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/apps_graph")
+@SuppressWarnings("unchecked")
 public class ApplicationsGraphController {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplicationsGraphController.class);
