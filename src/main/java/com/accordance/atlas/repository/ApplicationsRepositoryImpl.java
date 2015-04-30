@@ -45,7 +45,6 @@ public class ApplicationsRepositoryImpl implements ApplicationsRepository {
         logger.debug("Executing App search query: " + q);
 
         HashMap<String, String> params = new HashMap<>();
-//        params.put("id", query.fromNode());
 
         OSQLSynchQuery<OrientVertex> qr = new OSQLSynchQuery<>(q);
         Iterable<OrientVertex> vertices = orientDb.startNoTransaction().command(qr).execute(params);

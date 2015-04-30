@@ -7,7 +7,6 @@ import com.ecwid.consul.v1.kv.model.GetValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Repository;
 
@@ -29,30 +28,12 @@ public class ConsulRepository {
     @Autowired
     DiscoveryClient discoveryClient;
 
-    private static ConsulClient client;
+    @Autowired
+    ConsulClient consulClient;
+
     private static String securityToken;
 
-    public static final String CONSUL_NAME = "consul";
-
     private ConsulClient getClient() {
-        if (client == null) {
-
-            ServiceInstance instance = null;
-            List<ServiceInstance> instances = discoveryClient.getInstances(CONSUL_NAME);
-            if (instances.size() > 0)
-            {
-                instance = instances.get(0);
-            }
-
-            String host = "localhost";
-            int port = 8500;
-            if (instance == null) {
-                host = instance.getHost();
-                port = instance.getPort();
-            }
-
-            client = new ConsulClient(host, port);
-        }
 
         if (securityToken == null) {
             try {
@@ -61,24 +42,10 @@ public class ConsulRepository {
             } catch (IOException e) {
                 securityToken = "";
             }
-//            FileUtils.readFileToString(Paths.get("aa"));
         }
 
-        return client;
+        return consulClient;
     }
-
-//    public Response<List<CatalogService>> getService(String serviceId) {
-//        return getClient().getCatalogService("orientdb", new QueryParams("dev"));
-//    }
-//
-//    public String getSingleServiceAddress(String serviceId) {
-//
-//        List<CatalogService> responce = getClient().getCatalogService(serviceId, new QueryParams("dev")).getValue();
-//
-//        CatalogService service = responce.get(new Random().nextInt(responce.size()));
-//
-//        return service.getAddress() + ":" + service.getServicePort();
-//    }
 
     private String decodeValue(GetValue value) {
         byte[] decoded = Base64.getDecoder().decode(value.getValue());
@@ -88,6 +55,9 @@ public class ConsulRepository {
     public String getPropertyValue(String path, String defaultValue) {
         QueryParams queryParams = new QueryParams("dev");
         Response<GetValue> kvValue = getClient().getKVValue(path, securityToken, queryParams);
+        if (kvValue.getValue() == null)
+            return defaultValue;
+
         return decodeValue(kvValue.getValue());
     }
 
@@ -97,6 +67,9 @@ public class ConsulRepository {
 
         QueryParams queryParams = new QueryParams("dev");
         Response<List<GetValue>> kvValues = getClient().getKVValues(prefix, securityToken, queryParams);
+        if (kvValues.getValue() == null)
+            return defaultValue;
+
         kvValues.getValue().forEach(value -> result.put(value.getKey().replace(prefix + "/", ""), decodeValue(value)));
 
         return result;
