@@ -21,7 +21,7 @@ configurations {
 
 project.ext {
     springBootVersion = '1.2.3.RELEASE'
-    springCloudVersion = '1.0.0.RELEASE'
+    springCloudVersion = '1.0.1.RELEASE'
     restAssuredVersion = '2.4.0'
     consulApiVersion = '1.1.0'
     springConsulVersion = '1.0.16.BUILD-SNAPSHOT'
