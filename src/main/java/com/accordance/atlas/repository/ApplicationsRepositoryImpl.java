@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class ApplicationsRepositoryImpl implements ApplicationsRepository {
@@ -44,7 +44,7 @@ public class ApplicationsRepositoryImpl implements ApplicationsRepository {
 
         logger.debug("Executing App search query: " + q);
 
-        HashMap<String, String> params = new HashMap<>();
+        Map<String, String> params = new HashMap<>();
 
         OSQLSynchQuery<OrientVertex> qr = new OSQLSynchQuery<>(q);
         Iterable<OrientVertex> vertices = orientDb.startNoTransaction().command(qr).execute(params);
@@ -58,11 +58,15 @@ public class ApplicationsRepositoryImpl implements ApplicationsRepository {
 
     @Override
     public Vertex getApplicationById(String id) {
-        Iterator<Vertex> iterator = orientDb.startNoTransaction().getVertices("Application.id", id).iterator();
+        String q = "select *, first(In(\"Owns\").id) as owner_team_id from Application where id= :id";
+        Map<String, String> params = new HashMap<>();
+        params.put("id", id);
 
-        if (iterator.hasNext()) {
-            return iterator.next();
-        }
+        OSQLSynchQuery<OrientVertex> qr = new OSQLSynchQuery<>(q);
+        Iterable<Vertex> vertices = orientDb.startNoTransaction().command(qr).execute(params);
+
+        if (vertices.iterator().hasNext())
+            return vertices.iterator().next();
 
         return null;
     }
