@@ -10,11 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Repository;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -31,16 +27,13 @@ public class ConsulRepository {
     @Autowired
     ConsulClient consulClient;
 
-    private static String securityToken;
+    private static volatile String securityToken;
 
     private ConsulClient getClient() {
-
         if (securityToken == null) {
-            try {
-                securityToken = "";
-                securityToken = Files.readAllLines(Paths.get("consul_token.development"), Charset.defaultCharset()).get(0);
-            } catch (IOException e) {
-                securityToken = "";
+            securityToken = System.getenv("CONSUL_TOKEN");
+            if (securityToken == null) {
+                logger.warn("There is no security token defined in environment variable CONSUL_TOKEN.");
             }
         }
 
