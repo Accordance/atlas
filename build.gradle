@@ -25,6 +25,7 @@ project.ext {
     restAssuredVersion = '2.4.0'
     consulApiVersion = '1.1.6'
     springConsulVersion = '1.0.0.M4'
+    springfoxVersion = '2.3.1'
 
     // Defaults
     packageDir = file('pkg')
@@ -78,6 +79,8 @@ dependencies {
     compile 'com.orientechnologies:orientdb-graphdb:2.0.5'
     compile 'com.orientechnologies:orientdb-client:2.0.5'
     compile 'org.codehaus.jackson:jackson-core-asl:1.9.13'
+    compile "io.springfox:springfox-swagger2:${springfoxVersion}"
+    compile "io.springfox:springfox-swagger-ui:${springfoxVersion}"
 
 //    provided "org.projectlombok:lombok:1.16.4"
 //    compile "org.projectlombok:lombok:1.16.4"
@@ -136,8 +139,19 @@ task dockerBuild { //(type:Exec) {
 }
 
 bootRun {
-    if ( project.hasProperty('args') ) {
+    dependsOn 'bootRunConfig'
+
+    if (project.hasProperty('args')) {
         args project.args.split('\\s+')
+    }
+}
+
+task bootRunConfig {
+    doLast {
+        String dockerHost = dockerExecutor.getDockerHostIp()
+        bootRun.args "--spring.cloud.consul.host=${dockerHost}"
+        bootRun.args "--spring.cloud.consul.discovery.ipAddress=${dockerHost}"
+        bootRun.args "--orient_db.host=${dockerHost}"
     }
 }
 
