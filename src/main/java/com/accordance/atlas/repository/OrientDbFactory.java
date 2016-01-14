@@ -10,46 +10,102 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.PreDestroy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class OrientDbFactory {
-
-    @Autowired
-    private OrientDbConfiguration dbProperties;
-
-    @Autowired
-    LoadBalancerClient loadBalancer;
-
-    @Autowired
-    ConsulRepository consulRepository;
-
-    private static Map<String, String> credentials;
-
     public static final String ORIENTDB_NAME = "orientdb-data";
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrientDbFactory.class);
 
-    public OrientGraphFactory getGraph() {
+    private final AtomicReference<Credentials> credentialsRef;
+    private final AtomicReference<OrientGraphFactory> dbPoolRef;
+
+    private final OrientDbConfiguration defaultDbConfig;
+    private final LoadBalancerClient loadBalancer;
+    private final ConsulRepository consulRepository;
+
+    @Autowired
+    public OrientDbFactory(
+            OrientDbConfiguration defaultDbConfig,
+            LoadBalancerClient loadBalancer,
+            ConsulRepository consulRepository) {
+
+        this.defaultDbConfig = defaultDbConfig;
+        this.loadBalancer = loadBalancer;
+        this.consulRepository = consulRepository;
+
+        this.credentialsRef = new AtomicReference<>(null);
+        this.dbPoolRef = new AtomicReference<>(null);
+    }
+
+    private DbAddress getDbAddress() {
+        String dbName = defaultDbConfig.getDbName();
 
         ServiceInstance instance = loadBalancer.choose(ORIENTDB_NAME);
-
         if (instance != null) {
-            dbProperties.setHost(instance.getHost());
-            dbProperties.setPort(instance.getPort());
+            return new DbAddress(dbName, instance.getHost(), instance.getPort());
         }
 
+        return new DbAddress(dbName, defaultDbConfig.getHost(), defaultDbConfig.getPort());
+    }
+
+    private Credentials getCredentials() {
+        Credentials credentials = credentialsRef.get();
         if (credentials == null) {
-            credentials = consulRepository.getPropertyValuesRecursive("secrets/orientdb", new HashMap<>());
+            Map<String, String> credentialProps = consulRepository.getPropertyValuesRecursive("secrets/orientdb", new HashMap<>());
+            if (credentialProps != null) {
+                String userName = credentialProps.get("username");
+                String password = credentialProps.get("password");
+                credentials = new Credentials(
+                        userName != null ? userName : defaultDbConfig.getUsername(),
+                        password != null ? password : defaultDbConfig.getPassword());
+
+                if (!credentialsRef.compareAndSet(null, credentials)) {
+                    credentials = credentialsRef.get();
+                }
+            }
         }
 
-        if (credentials.containsKey("username")) {
-            dbProperties.setUsername(credentials.get("username"));
+        if (credentials != null) {
+            return credentials;
         }
 
-        if (credentials.containsKey("password")) {
-            dbProperties.setPassword(credentials.get("password"));
-        }
+        return new Credentials(defaultDbConfig.getUsername(), defaultDbConfig.getPassword());
+    }
 
-        return new OrientGraphFactory(dbProperties.getConnectionString(),
-                dbProperties.getUsername(), dbProperties.getPassword()).setupPool(1, 10);
+    public OrientGraphFactory getGraph() {
+        OrientGraphFactory result = dbPoolRef.get();
+        if (result == null) {
+            DbAddress dbAddress = getDbAddress();
+            Credentials credentials = getCredentials();
+
+            LOGGER.info("Creating OrientDb pool.");
+
+            result = new OrientGraphFactory(
+                    dbAddress.getConnectionString(),
+                    credentials.getUserName(),
+                    credentials.getPassword());
+            result.setupPool(1, 10);
+
+            if (!dbPoolRef.compareAndSet(null, result)) {
+                result.close();
+                result = dbPoolRef.get();
+            }
+        }
+        return result;
+    }
+
+    @PreDestroy
+    public void close() {
+        OrientGraphFactory result = dbPoolRef.getAndSet(null);
+        if (result != null) {
+            LOGGER.info("Closing OrientDb pool.");
+            result.close();
+            LOGGER.info("OrientDb has been closed successfully.");
+        }
     }
 
     public OrientGraph startTransaction() {
@@ -58,5 +114,39 @@ public class OrientDbFactory {
 
     public OrientGraphNoTx startNoTransaction() {
         return getGraph().getNoTx();
+    }
+
+    private static final class Credentials {
+        private final String userName;
+        private final String password;
+
+        public Credentials(String userName, String password) {
+            this.userName = userName;
+            this.password = password;
+        }
+
+        public String getUserName() {
+            return userName;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+    }
+
+    private static final class DbAddress {
+        private final String dbName;
+        private final String hostName;
+        private final int port;
+
+        public DbAddress(String dbName, String hostName, int port) {
+            this.dbName = dbName;
+            this.hostName = hostName;
+            this.port = port;
+        }
+
+        public String getConnectionString() {
+            return "remote:" + hostName + ":" + port + "/" + dbName;
+        }
     }
 }
