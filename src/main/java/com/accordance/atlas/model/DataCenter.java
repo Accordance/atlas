@@ -19,6 +19,11 @@ public final class DataCenter {
         return description;
     }
 
+    @Override
+    public String toString() {
+        return "DataCenter{" + "userId=" + userId + ", description=" + description + '}';
+    }
+
     public static final class Builder {
         private final String userId;
         private String description;
