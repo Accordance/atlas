@@ -1,6 +1,6 @@
 package com.accordance.atlas.controller;
 
-import com.accordance.atlas.model.JSONResultSet;
+import com.accordance.atlas.model.JsonUtils;
 import com.accordance.atlas.repository.TeamsRepository;
 import com.tinkerpop.blueprints.Vertex;
 import org.slf4j.Logger;
@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import org.json.simple.JSONArray;
 
 @RestController
 @RequestMapping("/teams")
@@ -25,9 +26,8 @@ public class TeamsDirectoryController {
     // Get all teams
     @RequestMapping(method = RequestMethod.GET)
     @ResponseBody
-    public JSONResultSet index() {
+    public JSONArray index() {
         List<Vertex> teams = teamsRepo.findTeams();
-
-        return new JSONResultSet(teams);
+        return JsonUtils.fromVertexList(teams);
     }
 }
