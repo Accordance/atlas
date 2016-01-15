@@ -138,16 +138,6 @@ public class LoadBalancedOrientDbFactory implements OrientDbFactory {
         }
     }
 
-    @Override
-    public OrientGraph startTransaction() {
-        return getGraph().getTx();
-    }
-
-    @Override
-    public OrientGraphNoTx startNoTransaction() {
-        return getGraph().getNoTx();
-    }
-
     private static final class Credentials {
         private final String userName;
         private final String password;
