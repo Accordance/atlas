@@ -15,14 +15,19 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Repository
 public class ApplicationsRepositoryImpl implements ApplicationsRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplicationsRepositoryImpl.class);
 
+    private final OrientDbFactory orientDb;
+
     @Autowired
-    OrientDbFactory orientDb;
+    public ApplicationsRepositoryImpl(OrientDbFactory orientDb) {
+        this.orientDb = Objects.requireNonNull(orientDb, "orientDb");
+    }
 
     @Override
     public List<Vertex> findApplications() {
