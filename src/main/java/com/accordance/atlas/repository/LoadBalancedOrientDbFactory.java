@@ -1,9 +1,6 @@
 package com.accordance.atlas.repository;
 
-import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
-import com.tinkerpop.blueprints.impls.orient.OrientGraph;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
-import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
@@ -12,7 +9,6 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import javax.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,33 +95,6 @@ public class LoadBalancedOrientDbFactory implements OrientDbFactory {
             }
         }
         return result;
-    }
-
-    @Override
-    public <R> R withGraphNoTx(Function<? super OrientGraphNoTx, ? extends R> action) {
-        OrientGraphNoTx graph = getGraph().getNoTx();
-        try {
-            return action.apply(graph);
-        } finally {
-            graph.shutdown();
-        }
-    }
-
-    @Override
-    public <R> R withGraphTx(Function<? super OrientGraph, ? extends R> action) {
-        OrientGraph graph = getGraph().getTx();
-        try {
-            return action.apply(graph);
-        } finally {
-            graph.shutdown();
-        }
-    }
-
-    @Override
-    public <R> R withDocumentDb(Function<? super ODatabaseDocumentTx, ? extends R> action) {
-        try (ODatabaseDocumentTx documentDb = getGraph().getDatabase()) {
-            return action.apply(documentDb);
-        }
     }
 
     @PreDestroy

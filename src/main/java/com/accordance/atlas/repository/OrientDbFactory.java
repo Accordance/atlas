@@ -10,9 +10,27 @@ import java.util.function.Function;
 public interface OrientDbFactory {
     public OrientGraphFactory getGraph();
 
-    public <R> R withDocumentDb(Function<? super ODatabaseDocumentTx, ? extends R> action);
+    public default <R> R withGraphNoTx(Function<? super OrientGraphNoTx, ? extends R> action) {
+        OrientGraphNoTx graph = getGraph().getNoTx();
+        try {
+            return action.apply(graph);
+        } finally {
+            graph.shutdown();
+        }
+    }
 
-    public <R> R withGraphNoTx(Function<? super OrientGraphNoTx, ? extends R> action);
+    public default <R> R withGraphTx(Function<? super OrientGraph, ? extends R> action) {
+        OrientGraph graph = getGraph().getTx();
+        try {
+            return action.apply(graph);
+        } finally {
+            graph.shutdown();
+        }
+    }
 
-    public <R> R withGraphTx(Function<? super OrientGraph, ? extends R> action);
+    public default <R> R withDocumentDb(Function<? super ODatabaseDocumentTx, ? extends R> action) {
+        try (ODatabaseDocumentTx documentDb = getGraph().getDatabase()) {
+            return action.apply(documentDb);
+        }
+    }
 }
