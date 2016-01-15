@@ -20,7 +20,7 @@ public final class OrientDataCenterRepository implements DataCenterRepository {
     private final OrientDbFactory dbFactory;
 
     @Autowired
-    public OrientDataCenterRepository(LoadBalancedOrientDbFactory db) {
+    public OrientDataCenterRepository(OrientDbFactory db) {
         this.dbFactory = Objects.requireNonNull(db, "db");
     }
 
