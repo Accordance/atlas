@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Repository
 public class TeamsRepositoryImpl implements TeamsRepository {
@@ -17,7 +18,11 @@ public class TeamsRepositoryImpl implements TeamsRepository {
     private static final Logger logger = LoggerFactory.getLogger(TeamsRepositoryImpl.class);
 
     @Autowired
-    OrientDbFactory orientDb;
+    private final OrientDbFactory orientDb;
+
+    public TeamsRepositoryImpl(OrientDbFactory orientDb) {
+        this.orientDb = Objects.requireNonNull(orientDb);
+    }
 
     @Override
     public List<Vertex> findTeams() {
