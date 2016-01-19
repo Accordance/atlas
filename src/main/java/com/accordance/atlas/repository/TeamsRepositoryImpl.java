@@ -20,6 +20,7 @@ public class TeamsRepositoryImpl implements TeamsRepository {
     @Autowired
     private final OrientDbFactory orientDb;
 
+    @Autowired
     public TeamsRepositoryImpl(OrientDbFactory orientDb) {
         this.orientDb = Objects.requireNonNull(orientDb);
     }
