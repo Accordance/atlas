@@ -9,4 +9,9 @@ public interface ApplicationsRepository {
     List<Vertex> findApplications(ApplicationQueryBuilder query);
 
     Vertex getApplicationById(String s);
+    
+    boolean getAppDeploymentStatus(String id);
+    boolean activateDeploymentLock(String id);
+    boolean releaseDeploymentLock(String id);
+
 }

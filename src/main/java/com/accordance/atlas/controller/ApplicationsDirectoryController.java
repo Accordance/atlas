@@ -5,9 +5,12 @@ import com.accordance.atlas.model.JSONResultSet;
 import com.accordance.atlas.repository.ApplicationQueryBuilder;
 import com.accordance.atlas.repository.ApplicationsRepository;
 import com.tinkerpop.blueprints.Vertex;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,4 +47,39 @@ public class ApplicationsDirectoryController {
 
         return new JSONRecord(v);
     }
+	
+	@RequestMapping(value = "/deploy/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseEntity<String> activateDeploymentLock(@PathVariable("id") String id) {
+        
+		boolean deploy = appsRepo.getAppDeploymentStatus(id);
+		
+		if(!deploy) {
+			if(appsRepo.activateDeploymentLock(id))
+				return new ResponseEntity<String>("Deployment Lock Activated Successfully", HttpStatus.OK);
+			else
+				return new ResponseEntity<String>("Application Not Found", HttpStatus.FORBIDDEN);
+		}
+		else {
+			return new ResponseEntity<String>("Deployment Lock is Active", HttpStatus.FORBIDDEN);
+		}
+    }
+	
+	@RequestMapping(value = "/release-deploy/{id}", method = RequestMethod.POST)
+    @ResponseBody
+    public ResponseEntity<String> releaseDeploymentLock(@PathVariable("id") String id) {
+		
+		boolean deploy = appsRepo.getAppDeploymentStatus(id);
+		
+		if(!deploy) {
+			if(appsRepo.releaseDeploymentLock(id))
+				return new ResponseEntity<String>("Deployment Lock Released Successfully", HttpStatus.OK);
+			else
+				return new ResponseEntity<String>("Application Not Found", HttpStatus.FORBIDDEN);
+		}
+		else {
+			return new ResponseEntity<String>("Deployment Lock is not Active", HttpStatus.FORBIDDEN);
+		} 
+    }  
+
 }

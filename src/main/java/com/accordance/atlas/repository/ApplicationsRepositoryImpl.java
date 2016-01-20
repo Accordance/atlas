@@ -1,8 +1,10 @@
 package com.accordance.atlas.repository;
 
+import com.orientechnologies.orient.core.sql.OCommandSQL;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientVertex;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,4 +72,46 @@ public class ApplicationsRepositoryImpl implements ApplicationsRepository {
 
         return null;
     }
+	
+	@Override
+    public boolean getAppDeploymentStatus(String id) {
+        String q = "select deploy from Application where id= :id";
+        Map<String, String> params = new HashMap<>();
+        params.put("id", id);
+
+        OSQLSynchQuery<OrientVertex> qr = new OSQLSynchQuery<>(q);
+        Iterable<Vertex> vertices = orientDb.startNoTransaction().command(qr).execute(params);
+		
+        if (vertices.iterator().hasNext())
+            return (boolean)vertices.iterator().next().getProperty("deploy");
+		else 
+			return false;
+    }
+	
+	@Override
+    public boolean activateDeploymentLock(String id) {
+        String q = "update Application set deploy = true where id= :id";
+        Map<String, String> params = new HashMap<>();
+        params.put("id", id);
+        
+        int updated = orientDb.startTransaction().command(new OCommandSQL(q)).execute(params);
+	    if(updated > 0) return true;
+	    else return false;
+
+    }
+	
+	@Override
+    public boolean releaseDeploymentLock(String id) {
+    
+	    String q = "update Application set deploy = false where id= :id";
+	    
+	    Map<String, String> params = new HashMap<>();
+	    params.put("id", id);
+	
+	    int updated = orientDb.startTransaction().command(new OCommandSQL(q)).execute(params);
+	    if(updated > 0) return true;
+	    else return false;
+	        
+	}
+
 }
