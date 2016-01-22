@@ -1,5 +1,6 @@
 package com.accordance.atlas.repository;
 
+import com.accordance.atlas.model.DeployRecord;
 import com.orientechnologies.orient.core.sql.OCommandSQL;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.tinkerpop.blueprints.Vertex;
@@ -101,12 +102,13 @@ public class ApplicationsRepositoryImpl implements ApplicationsRepository {
     }
 	
 	@Override
-    public boolean releaseDeploymentLock(String id) {
+    public boolean releaseDeploymentLock(DeployRecord app) {
     
-	    String q = "update Application set deploy = false where id= :id";
+	    String q = "update Application set deploy = false, version = :version where id= :id";
 	    
 	    Map<String, String> params = new HashMap<>();
-	    params.put("id", id);
+	    params.put("id", app.getId());
+	    params.put("version", app.getVersion());
 	
 	    int updated = orientDb.startTransaction().command(new OCommandSQL(q)).execute(params);
 	    if(updated > 0) return true;

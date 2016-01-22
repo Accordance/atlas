@@ -1,5 +1,6 @@
 package com.accordance.atlas.controller;
 
+import com.accordance.atlas.model.DeployRecord;
 import com.accordance.atlas.model.JSONRecord;
 import com.accordance.atlas.model.JSONResultSet;
 import com.accordance.atlas.repository.ApplicationQueryBuilder;
@@ -48,14 +49,14 @@ public class ApplicationsDirectoryController {
         return new JSONRecord(v);
     }
 	
-	@RequestMapping(value = "/deploy/{id}", method = RequestMethod.POST)
+	@RequestMapping(value = "/deploy", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseEntity<String> activateDeploymentLock(@PathVariable("id") String id) {
+    public ResponseEntity<String> activateDeploymentLock(@RequestBody DeployRecord app) {
         
-		boolean deploy = appsRepo.getAppDeploymentStatus(id);
+		boolean deploy = appsRepo.getAppDeploymentStatus(app.getId());
 		
 		if(!deploy) {
-			if(appsRepo.activateDeploymentLock(id))
+			if(appsRepo.activateDeploymentLock(app.getId()))
 				return new ResponseEntity<String>("Deployment Lock Activated Successfully", HttpStatus.OK);
 			else
 				return new ResponseEntity<String>("Application Not Found", HttpStatus.FORBIDDEN);
@@ -65,14 +66,14 @@ public class ApplicationsDirectoryController {
 		}
     }
 	
-	@RequestMapping(value = "/release-deploy/{id}", method = RequestMethod.POST)
+	@RequestMapping(value = "/release-deploy", method = RequestMethod.POST)
     @ResponseBody
-    public ResponseEntity<String> releaseDeploymentLock(@PathVariable("id") String id) {
+    public ResponseEntity<String> releaseDeploymentLock(@RequestBody DeployRecord app) {
 		
-		boolean deploy = appsRepo.getAppDeploymentStatus(id);
+		boolean deploy = appsRepo.getAppDeploymentStatus(app.getId());
 		
-		if(!deploy) {
-			if(appsRepo.releaseDeploymentLock(id))
+		if(deploy) {
+			if(appsRepo.releaseDeploymentLock(app))
 				return new ResponseEntity<String>("Deployment Lock Released Successfully", HttpStatus.OK);
 			else
 				return new ResponseEntity<String>("Application Not Found", HttpStatus.FORBIDDEN);
