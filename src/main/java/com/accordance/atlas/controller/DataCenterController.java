@@ -9,6 +9,8 @@ import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -48,18 +50,21 @@ public class DataCenterController {
     }
 
     @RequestMapping(value = "/data_centers", method = RequestMethod.GET, produces = "application/json")
-    public JSONArray getDataCenters() throws IOException {
+    public JSONObject getDataCenters() throws IOException {
         LOGGER.debug("Retrieving all DataCenter vertexes from OrientDb.");
 
-        JSONArray result = new JSONArray();
+        JSONArray resultList = new JSONArray();
         dataCenters.getAllDataCenters((dataCenter) -> {
-            result.add(toJson(dataCenter));
+            resultList.add(toJson(dataCenter));
         });
+
+        JSONObject result = new JSONObject();
+        result.put("datacenters", resultList);
         return result;
     }
 
     @RequestMapping(value = "/data_centers", method = RequestMethod.POST)
-    public void addDataCenter(
+    public ResponseEntity<JSONObject> addDataCenter(
             @RequestParam(value = "id", required = true) String id,
             @RequestParam(value = "descr", required = false, defaultValue = "") String descr) throws IOException {
 
@@ -67,8 +72,22 @@ public class DataCenterController {
         dataCenterBuilder.setDescription(descr);
 
         DataCenter dataCenter = dataCenterBuilder.create();
-        dataCenters.addDataCenter(dataCenter);
+        LOGGER.info("Attempting to add DataCenter: {}", dataCenter);
 
-        LOGGER.info("Successfully added new DataCenter: {}", dataCenter);
+        String notification;
+        HttpStatus status;
+        if (!dataCenters.addDataCenter(dataCenter)) {
+            notification = "Data center with id " + id + " already exists.";
+            status = HttpStatus.FORBIDDEN;
+        }
+        else {
+            notification = "Ok";
+            status = HttpStatus.OK;
+            LOGGER.info("Successfully added new DataCenter: {}", dataCenter);
+        }
+
+        JSONObject resultObj = new JSONObject();
+        resultObj.put("notification", notification);
+        return new ResponseEntity(resultObj, status);
     }
 }

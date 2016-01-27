@@ -120,10 +120,11 @@ public class DataCenterControllerTest {
 
     private static List<DataCenter> parseJsonDataCenters(String json) throws ParseException {
         JSONParser parser = new JSONParser();
-        JSONArray jsonResult = (JSONArray)parser.parse(json);
+        JSONObject jsonResult = (JSONObject)parser.parse(json);
+        JSONArray jsonDataCenters = (JSONArray)jsonResult.get("datacenters");
 
         List<DataCenter> result = new ArrayList<>(jsonResult.size());
-        for (Object jsonObj: jsonResult) {
+        for (Object jsonObj: jsonDataCenters) {
             result.add(DataCenterController.fromJson((JSONObject)jsonObj));
         }
         return result;

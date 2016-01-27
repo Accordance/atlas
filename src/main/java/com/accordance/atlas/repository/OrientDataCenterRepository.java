@@ -1,16 +1,21 @@
 package com.accordance.atlas.repository;
 
 import com.accordance.atlas.model.DataCenter;
+import com.orientechnologies.orient.core.storage.ORecordDuplicatedException;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public final class OrientDataCenterRepository implements DataCenterRepository {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataCenterRepository.class);
+
     private static final String DATA_CENTER_CLASS_NAME = "DataCenter";
     private static final String DATA_CENTER_CLASS_NAME_REF = "class:" + DATA_CENTER_CLASS_NAME;
 
@@ -47,14 +52,20 @@ public final class OrientDataCenterRepository implements DataCenterRepository {
     }
 
     @Override
-    public void addDataCenter(DataCenter dataCenter) throws IOException {
+    public boolean addDataCenter(DataCenter dataCenter) throws IOException {
         Objects.requireNonNull(dataCenter, "dataCenter");
 
-        dbFactory.withGraphNoTx((OrientGraphNoTx db) -> {
-            db.addVertex(DATA_CENTER_CLASS_NAME_REF,
-                    KEY_ID, dataCenter.getUserId(),
-                    KEY_DESCRIPTION, dataCenter.getDescription());
-            return null;
-        });
+        try {
+            dbFactory.withGraphNoTx((OrientGraphNoTx db) -> {
+                db.addVertex(DATA_CENTER_CLASS_NAME_REF,
+                        KEY_ID, dataCenter.getUserId(),
+                        KEY_DESCRIPTION, dataCenter.getDescription());
+                return null;
+            });
+            return true;
+        } catch (ORecordDuplicatedException ex) {
+            LOGGER.warn("Duplicate data center: {}", dataCenter.getUserId());
+            return false;
+        }
     }
 }

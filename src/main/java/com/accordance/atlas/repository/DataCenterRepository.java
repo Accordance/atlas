@@ -6,5 +6,5 @@ import java.util.function.Consumer;
 
 public interface DataCenterRepository {
     public void getAllDataCenters(Consumer<? super DataCenter> elementProcessor) throws IOException;
-    public void addDataCenter(DataCenter dataCenter) throws IOException;
+    public boolean addDataCenter(DataCenter dataCenter) throws IOException;
 }
