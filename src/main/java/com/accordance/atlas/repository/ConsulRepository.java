@@ -4,6 +4,8 @@ import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.QueryParams;
 import com.ecwid.consul.v1.Response;
 import com.ecwid.consul.v1.kv.model.GetValue;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,10 +13,14 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Repository;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Repository
 public class ConsulRepository {
@@ -27,17 +33,35 @@ public class ConsulRepository {
     @Autowired
     ConsulClient consulClient;
 
-    private static volatile String securityToken;
+    private static final AtomicReference<String> SECURITY_TOKEN_REF = new AtomicReference<>();
 
     private ConsulClient getClient() {
-        if (securityToken == null) {
-            securityToken = System.getenv("CONSUL_TOKEN");
-            if (securityToken == null) {
-                logger.warn("There is no security token defined in environment variable CONSUL_TOKEN.");
+        return consulClient;
+    }
+
+    private String getSecurityToken() {
+        String result = SECURITY_TOKEN_REF.get();
+        if (result == null) {
+            result = readSecurityToken();
+            if (!SECURITY_TOKEN_REF.compareAndSet(null, result)) {
+                result = SECURITY_TOKEN_REF.get();
             }
         }
+        return result;
+    }
 
-        return consulClient;
+    private String readSecurityToken() {
+        // FIXME: Don't read from the current working directory.
+        Path tokenPath = Paths.get("consul_token.development");
+        try {
+            if (Files.isRegularFile(tokenPath)) {
+                return Files.readAllLines(Paths.get("consul_token.development"), Charset.defaultCharset()).get(0);
+            }
+        } catch (IOException ex) {
+            logger.warn("Could not read security token file: {}: {}", tokenPath, ex);
+        }
+
+        return System.getenv("CONSUL_TOKEN");
     }
 
     private String decodeValue(GetValue value) {
@@ -47,7 +71,7 @@ public class ConsulRepository {
 
     public String getPropertyValue(String path, String defaultValue) {
         QueryParams queryParams = new QueryParams("dev");
-        Response<GetValue> kvValue = getClient().getKVValue(path, securityToken, queryParams);
+        Response<GetValue> kvValue = getClient().getKVValue(path, getSecurityToken(), queryParams);
         if (kvValue.getValue() == null)
             return defaultValue;
 
@@ -59,7 +83,7 @@ public class ConsulRepository {
         Map<String, String> result = new HashMap<String, String>();
 
         QueryParams queryParams = new QueryParams("dev");
-        Response<List<GetValue>> kvValues = getClient().getKVValues(prefix, securityToken, queryParams);
+        Response<List<GetValue>> kvValues = getClient().getKVValues(prefix, getSecurityToken(), queryParams);
         if (kvValues.getValue() == null)
             return defaultValue;
 
