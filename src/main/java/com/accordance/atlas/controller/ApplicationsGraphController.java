@@ -31,7 +31,7 @@ public class ApplicationsGraphController {
             @RequestParam(value = "down", required = false, defaultValue = "false") boolean downGraph,
 //            @RequestParam(value = "exclude", required = false) String excludeNodes,
 //            @RequestParam(value = "include", required = false) String includeNodes,
-            @RequestParam(value = "hops", required = false) Integer nomOfHops) {
+            @RequestParam(value = "hops", required = false, defaultValue = "40") Integer nomOfHops) {
 
 //        graph = GraphTraverser.new ApplicationInfo.applications.all
 
@@ -57,7 +57,7 @@ public class ApplicationsGraphController {
             @RequestParam(value = "down", required = false, defaultValue = "false") boolean downGraph,
 //            @RequestParam(value = "exclude", required = false) String excludeNodes,
 //            @RequestParam(value = "include", required = false) String includeNodes,
-            @RequestParam(value = "hops", required = false) Integer nomOfHops) {
+            @RequestParam(value = "hops", required = false, defaultValue = "40") Integer nomOfHops) {
 
 //        graph = GraphTraverser.new ApplicationInfo.applications.all
 
