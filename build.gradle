@@ -80,7 +80,9 @@ dependencies {
     compile 'com.orientechnologies:orientdb-client:2.0.5'
     compile 'org.codehaus.jackson:jackson-core-asl:1.9.13'
     compile "io.springfox:springfox-swagger2:${springfoxVersion}"
-    compile "io.springfox:springfox-swagger-ui:${springfoxVersion}"
+
+    // Comment this out if you need the Swagger UI accessible from within the service.
+    //compile "io.springfox:springfox-swagger-ui:${springfoxVersion}"
 
 //    provided "org.projectlombok:lombok:1.16.4"
 //    compile "org.projectlombok:lombok:1.16.4"
