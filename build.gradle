@@ -111,6 +111,8 @@ task preparePackage {
 }
 
 task copyPackageFiles(type: Copy) {
+    dependsOn build
+
     from(libsDir)
     include("*${jar.version}*.jar")
     into(packageDir)
