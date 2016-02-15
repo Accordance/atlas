@@ -18,11 +18,33 @@ import org.springframework.web.bind.annotation.RestController;
 public class DataCenterController {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataCenterController.class);
 
+    private static final String KEY_ID = "id";
+    private static final String KEY_DESCRIPTION = "descr";
+
     private final DataCenterRepository dataCenters;
 
     @Autowired
     public DataCenterController(DataCenterRepository dataCenters) {
         this.dataCenters = Objects.requireNonNull(dataCenters, "dataCenters");
+    }
+
+    public static JSONObject toJson(DataCenter dataCenter) {
+        JSONObject result = new JSONObject();
+        result.put(KEY_ID, dataCenter.getUserId());
+        result.put(KEY_DESCRIPTION, dataCenter.getDescription());
+        return result;
+    }
+
+    public static DataCenter fromJson(JSONObject json) {
+        Object jsonId = Objects.requireNonNull(json.get(KEY_ID), ".id");
+        DataCenter.Builder result = new DataCenter.Builder(jsonId.toString());
+
+        Object descr = json.get(KEY_DESCRIPTION);
+        if (descr != null) {
+            result.setDescription(descr.toString());
+        }
+
+        return result.create();
     }
 
     @RequestMapping(value = "/data_centers", method = RequestMethod.GET, produces = "application/json")
@@ -31,10 +53,7 @@ public class DataCenterController {
 
         JSONArray result = new JSONArray();
         dataCenters.getAllDataCenters((dataCenter) -> {
-            JSONObject dataCenterObj = new JSONObject();
-            dataCenterObj.put("id", dataCenter.getUserId());
-            dataCenterObj.put("descr", dataCenter.getDescription());
-            result.add(dataCenterObj);
+            result.add(toJson(dataCenter));
         });
         return result;
     }

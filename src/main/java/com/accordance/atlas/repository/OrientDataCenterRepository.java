@@ -24,7 +24,7 @@ public final class OrientDataCenterRepository implements DataCenterRepository {
         this.dbFactory = Objects.requireNonNull(db, "db");
     }
 
-    private static DataCenter fromVertex(Vertex vertex) {
+    public static DataCenter fromVertex(Vertex vertex) {
         String id = vertex.getProperty(KEY_ID);
         DataCenter.Builder result = new DataCenter.Builder(id);
 
