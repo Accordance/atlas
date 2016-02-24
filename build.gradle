@@ -97,6 +97,8 @@ dependencies {
     testCompile("com.jayway.restassured:rest-assured:$restAssuredVersion")
 }
 
+test.jvmArgs '-Dspring.cloud.consul.config.enabled=false'
+
 task dropPackage(type: Delete) {
     delete packageDir
 }
