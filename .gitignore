@@ -6,3 +6,6 @@ gradlew
 gradlew.bat
 consul_token.*
 pkg
+/.nb-gradle/
+/.nb-gradle-properties
+/bin/

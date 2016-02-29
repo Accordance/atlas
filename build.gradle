@@ -20,19 +20,20 @@ configurations {
 }
 
 project.ext {
-    springBootVersion = '1.2.3.RELEASE'
-    springCloudVersion = '1.0.1.RELEASE'
+    springBootVersion = '1.3.1.RELEASE'
+    springCloudVersion = '1.1.0.M4'
     restAssuredVersion = '2.4.0'
-    consulApiVersion = '1.1.0'
-    springConsulVersion = '1.0.16.BUILD-SNAPSHOT'
+    consulApiVersion = '1.1.6'
+    springConsulVersion = '1.0.0.M4'
+    springfoxVersion = '2.3.1'
 
     // Defaults
-    packageDir = new File('pkg')
+    packageDir = file('pkg')
 }
 
 jar {
     baseName = 'atlas'
-    version = '0.0.3'
+    version = '0.0.4'
 }
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -41,7 +42,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven { url 'http://repo.spring.io/snapshot' }
-//    maven { url 'http://nexus.ecwid.com/content/groups/public' }
+    maven { url 'http://nexus.ecwid.com/content/groups/public' }
 }
 
 dependencies {
@@ -60,6 +61,8 @@ dependencies {
     compile("org.springframework.cloud:spring-cloud-commons:$springCloudVersion")
     compile("org.springframework.cloud:spring-cloud-config-client:$springCloudVersion")
     compile("org.springframework.cloud:spring-cloud-starter-hystrix:$springCloudVersion")
+    compile("org.springframework.cloud:spring-cloud-netflix:$springCloudVersion")
+    compile("org.springframework.cloud:spring-cloud-starter-ribbon:$springCloudVersion")
 
     // Spring & Consul
     compile("org.springframework.cloud:spring-cloud-consul-core:$springConsulVersion")
@@ -67,13 +70,19 @@ dependencies {
     compile("org.springframework.cloud:spring-cloud-consul-discovery:$springConsulVersion")
 
     // Consul
-//    compile "com.ecwid.consul:consul-api:$consulApiVersion"
+    compile "com.ecwid.consul:consul-api:$consulApiVersion"
+    compile "com.netflix.ribbon:ribbon-loadbalancer:2.1.1"
+    compile "joda-time:joda-time:2.9.1"
 
     // OrientDB
     compile 'com.orientechnologies:orientdb-core:2.0.5'
     compile 'com.orientechnologies:orientdb-graphdb:2.0.5'
     compile 'com.orientechnologies:orientdb-client:2.0.5'
     compile 'org.codehaus.jackson:jackson-core-asl:1.9.13'
+    compile "io.springfox:springfox-swagger2:${springfoxVersion}"
+
+    // Comment this out if you need the Swagger UI accessible from within the service.
+    //compile "io.springfox:springfox-swagger-ui:${springfoxVersion}"
 
 //    provided "org.projectlombok:lombok:1.16.4"
 //    compile "org.projectlombok:lombok:1.16.4"
@@ -88,6 +97,8 @@ dependencies {
     testCompile("com.jayway.restassured:rest-assured:$restAssuredVersion")
 }
 
+test.jvmArgs '-Dspring.cloud.consul.config.enabled=false'
+
 task dropPackage(type: Delete) {
     delete packageDir
 }
@@ -100,6 +111,8 @@ task preparePackage {
 }
 
 task copyPackageFiles(type: Copy) {
+    dependsOn build
+
     from(libsDir)
     include("*${jar.version}*.jar")
     into(packageDir)
@@ -132,8 +145,19 @@ task dockerBuild { //(type:Exec) {
 }
 
 bootRun {
-    if ( project.hasProperty('args') ) {
+    dependsOn 'bootRunConfig'
+
+    if (project.hasProperty('args')) {
         args project.args.split('\\s+')
+    }
+}
+
+task bootRunConfig {
+    doLast {
+        String dockerHost = dockerExecutor.getDockerHostIp()
+        bootRun.args "--spring.cloud.consul.host=${dockerHost}"
+        bootRun.args "--spring.cloud.consul.discovery.ipAddress=${dockerHost}"
+        bootRun.args "--orient_db.host=${dockerHost}"
     }
 }
 

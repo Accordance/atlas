@@ -56,8 +56,4 @@ public class OrientDbConfiguration {
     public void setDbName(String db_name) {
         this.dbName = db_name;
     }
-
-    public String getConnectionString() {
-        return String.format("remote:%s:%d/%s", getHost(), getPort(), getDbName());
-    }
 }

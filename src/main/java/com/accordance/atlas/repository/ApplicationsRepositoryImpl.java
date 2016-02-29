@@ -4,6 +4,7 @@ import com.accordance.atlas.model.DeployRecord;
 import com.orientechnologies.orient.core.sql.OCommandSQL;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.tinkerpop.blueprints.Vertex;
+import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx;
 import com.tinkerpop.blueprints.impls.orient.OrientVertex;
 
 import org.slf4j.Logger;
@@ -12,17 +13,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Repository
 public class ApplicationsRepositoryImpl implements ApplicationsRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplicationsRepositoryImpl.class);
 
+    private final OrientDbFactory orientDb;
+
     @Autowired
-    OrientDbFactory orientDb;
+    public ApplicationsRepositoryImpl(OrientDbFactory orientDb) {
+        this.orientDb = Objects.requireNonNull(orientDb, "orientDb");
+    }
 
     @Override
     public List<Vertex> findApplications() {
@@ -47,16 +55,13 @@ public class ApplicationsRepositoryImpl implements ApplicationsRepository {
 
         logger.debug("Executing App search query: " + q);
 
-        Map<String, String> params = new HashMap<>();
-
         OSQLSynchQuery<OrientVertex> qr = new OSQLSynchQuery<>(q);
-        Iterable<OrientVertex> vertices = orientDb.startNoTransaction().command(qr).execute(params);
-
-        ArrayList<Vertex> foundVertices = new ArrayList<>();
-
-        vertices.forEach(v -> foundVertices.add(v));
-
-        return foundVertices;
+        return orientDb.withGraphNoTx((OrientGraphNoTx db) -> {
+            List<Vertex> result = new ArrayList<>();
+            Iterable<OrientVertex> vertices = db.command(qr).execute(Collections.emptyMap());
+            vertices.forEach(result::add);
+            return result;
+        });
     }
 
     @Override
@@ -66,12 +71,12 @@ public class ApplicationsRepositoryImpl implements ApplicationsRepository {
         params.put("id", id);
 
         OSQLSynchQuery<OrientVertex> qr = new OSQLSynchQuery<>(q);
-        Iterable<Vertex> vertices = orientDb.startNoTransaction().command(qr).execute(params);
+        return orientDb.withGraphNoTx((OrientGraphNoTx db) -> {
+            Iterable<Vertex> vertices = db.command(qr).execute(params);
+            Iterator<Vertex> verticesItr = vertices.iterator();
 
-        if (vertices.iterator().hasNext())
-            return vertices.iterator().next();
-
-        return null;
+            return verticesItr.hasNext() ? verticesItr.next() : null;
+        });
     }
 	
 	@Override
@@ -81,12 +86,14 @@ public class ApplicationsRepositoryImpl implements ApplicationsRepository {
         params.put("id", id);
 
         OSQLSynchQuery<OrientVertex> qr = new OSQLSynchQuery<>(q);
-        Iterable<Vertex> vertices = orientDb.startNoTransaction().command(qr).execute(params);
-		
-        if (vertices.iterator().hasNext())
-            return (boolean)vertices.iterator().next().getProperty("deploy");
-		else 
-			return false;
+        return orientDb.withGraphNoTx((OrientGraphNoTx db) -> {
+            Iterable<Vertex> vertices = db.command(qr).execute(params);
+    		
+            if (vertices.iterator().hasNext())
+                return (boolean)vertices.iterator().next().getProperty("deploy");
+    		else 
+    			return false;
+        });
     }
 	
 	@Override
@@ -95,10 +102,11 @@ public class ApplicationsRepositoryImpl implements ApplicationsRepository {
         Map<String, String> params = new HashMap<>();
         params.put("id", id);
         
-        int updated = orientDb.startTransaction().command(new OCommandSQL(q)).execute(params);
-	    if(updated > 0) return true;
-	    else return false;
-
+        return orientDb.withGraphNoTx((OrientGraphNoTx db) -> {
+            int updated = db.command(new OCommandSQL(q)).execute(params);
+    	    if(updated > 0) return true;
+    	    else return false;
+        });
     }
 	
 	@Override
@@ -110,10 +118,10 @@ public class ApplicationsRepositoryImpl implements ApplicationsRepository {
 	    params.put("id", app.getId());
 	    params.put("version", app.getVersion());
 	
-	    int updated = orientDb.startTransaction().command(new OCommandSQL(q)).execute(params);
-	    if(updated > 0) return true;
-	    else return false;
-	        
+        return orientDb.withGraphNoTx((OrientGraphNoTx db) -> {
+    	    int updated = db.command(new OCommandSQL(q)).execute(params);
+    	    if(updated > 0) return true;
+    	    else return false;
+        }); 
 	}
-
 }

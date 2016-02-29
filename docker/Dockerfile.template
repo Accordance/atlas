@@ -1,5 +1,7 @@
-FROM dockerfile/java:oracle-java8
+FROM dockering/oracle-java8
 MAINTAINER igor@igorshare.com
 EXPOSE 8080
+WORKDIR /data
+ENV HOME /root
 ADD ${name}-${version}.jar /opt/${name}.jar
 ENTRYPOINT ["java", "-jar", "/opt/${name}.jar"]

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Repository
 public class TeamsRepositoryImpl implements TeamsRepository {
@@ -17,17 +18,24 @@ public class TeamsRepositoryImpl implements TeamsRepository {
     private static final Logger logger = LoggerFactory.getLogger(TeamsRepositoryImpl.class);
 
     @Autowired
-    OrientDbFactory orientDb;
+    private final OrientDbFactory orientDb;
+
+    @Autowired
+    public TeamsRepositoryImpl(OrientDbFactory orientDb) {
+        this.orientDb = Objects.requireNonNull(orientDb);
+    }
 
     @Override
     public List<Vertex> findTeams() {
         String q = "select *, out(\"Owns\").id as applications from Team";
         OSQLSynchQuery<OrientVertex> qr = new OSQLSynchQuery<>(q);
-        Iterable<OrientVertex> teams = orientDb.startNoTransaction().command(qr).execute();
+        return orientDb.withGraphNoTx((db) -> {
+            Iterable<OrientVertex> teams = db.command(qr).execute();
 
-        ArrayList<Vertex> foundVertices = new ArrayList<>();
-        teams.forEach(team -> foundVertices.add(team));
+            List<Vertex> foundVertices = new ArrayList<>();
+            teams.forEach(foundVertices::add);
 
-        return foundVertices;
+            return foundVertices;
+        });
     }
 }

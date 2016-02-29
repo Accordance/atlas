@@ -5,17 +5,16 @@ spring:
   cloud:
     config:
       enabled: false
-
-
-consul:
-  host: localhost
-  port: 8500
-  enabled: true
-  tags:
-    - production
-#  managementTags: management
-  heartbeat:
-    ttlValue: 9
-    fixedRate: 8000
-  serviceOverride:
-    address: localhost
+    consul:
+      host: localhost
+      port: 8500
+      enabled: true
+      discovery:
+        ipAddress: localhost
+        preferIpAddress: true
+        tags:
+          - production
+        heartbeat:
+          ttlValue: 9
+          # not used ?
+          fixedRate: 8000
