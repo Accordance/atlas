@@ -1,9 +1,12 @@
 package com.accordance.atlas.repository;
 
+import com.accordance.atlas.model.DeployRecord;
+import com.orientechnologies.orient.core.sql.OCommandSQL;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx;
 import com.tinkerpop.blueprints.impls.orient.OrientVertex;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,4 +78,50 @@ public class ApplicationsRepositoryImpl implements ApplicationsRepository {
             return verticesItr.hasNext() ? verticesItr.next() : null;
         });
     }
+	
+	@Override
+    public boolean getAppDeploymentStatus(String id) {
+        String q = "select deploy from Application where id= :id";
+        Map<String, String> params = new HashMap<>();
+        params.put("id", id);
+
+        OSQLSynchQuery<OrientVertex> qr = new OSQLSynchQuery<>(q);
+        return orientDb.withGraphNoTx((OrientGraphNoTx db) -> {
+            Iterable<Vertex> vertices = db.command(qr).execute(params);
+    		
+            if (vertices.iterator().hasNext())
+                return (boolean)vertices.iterator().next().getProperty("deploy");
+    		else 
+    			return false;
+        });
+    }
+	
+	@Override
+    public boolean activateDeploymentLock(String id) {
+        String q = "update Application set deploy = true where id= :id";
+        Map<String, String> params = new HashMap<>();
+        params.put("id", id);
+        
+        return orientDb.withGraphNoTx((OrientGraphNoTx db) -> {
+            int updated = db.command(new OCommandSQL(q)).execute(params);
+    	    if(updated > 0) return true;
+    	    else return false;
+        });
+    }
+	
+	@Override
+    public boolean releaseDeploymentLock(DeployRecord app) {
+    
+	    String q = "update Application set deploy = false, version = :version where id= :id";
+	    
+	    Map<String, String> params = new HashMap<>();
+	    params.put("id", app.getId());
+	    params.put("version", app.getVersion());
+	
+        return orientDb.withGraphNoTx((OrientGraphNoTx db) -> {
+    	    int updated = db.command(new OCommandSQL(q)).execute(params);
+    	    if(updated > 0) return true;
+    	    else return false;
+        }); 
+	}
 }
